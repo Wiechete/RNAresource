@@ -96,7 +96,7 @@ parse_args <- function(){
 	# }
 	# Check if data_folder exists
 	if (!dir.exists(data_folder)) {
-		script_dir <- getwd() # does not work in batch mode
+		script_dir <- getwd() 
 		data_folder <- file.path(dirname(script_dir), "data_folder")
 		cat("Data folder not found, using default:", data_folder, "\n")
 	}
@@ -340,10 +340,10 @@ dev.off()
 get_gene_mapping <- function() {
 	mart <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")  # Replace dataset if non-human
 	gene_mapping <- getBM(
-		attributes = c("ensembl_gene_id", "hgnc_symbol", "chromosome_name"),
+		attributes = c("ensembl_gene_id", "hgnc_symbol"),
 		mart = mart
 	)
-	colnames(gene_mapping) <- c("gene_id", "gene_symbol", "Chrom")
+	colnames(gene_mapping) <- c("gene_id", "gene_symbol")
 	return(gene_mapping)
 }
 
@@ -352,13 +352,22 @@ get_gene_mapping <- function() {
 # Generate gene mapping table
 gene_mapping <- get_gene_mapping()
 
-# Merge results with gene_mapping
+# Merge results with gene_mapping for 3utr
 enriched_result_3UTR <- test_3UTRsing %>%
 	left_join(gene_mapping, by = "gene_symbol") %>%  # Match using gene_symbol
 	select(gene_id, gene_symbol, RED, pvalue, p_adj, APAreg)
 
+# Merge results with gene_mapping for IPA
+enriched_result_IPA <- test_IPAsing %>%
+	left_join(gene_mapping, by = "gene_symbol") %>%  # Match using gene_symbol
+	select(gene_id, gene_symbol,PASid, RED, pvalue, p_adj, APAreg)
+
 ###Saving 
-write.csv(test_3UTRsing, "3UTR_APAdiff_results.csv")
-write.csv(test_IPAsing, "IPA_APAdiff_results.csv")
+# write.csv(test_3UTRsing, "3UTR_APAdiff_results.csv")
+# write.csv(test_IPAsing, "IPA_APAdiff_results.csv")
+write.csv(enriched_result_3UTR, "3UTR_APAdiff_results.csv",row.names = FALSE, 
+					quote = FALSE)
+write.csv(enriched_result_IPA, "IPA_APAdiff_results.csv",row.names = FALSE, 
+					quote = FALSE)
 
 
