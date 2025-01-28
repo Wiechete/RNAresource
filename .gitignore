@@ -1,0 +1,2 @@
+#ignore bam and gtf files
+*.bam
