@@ -343,7 +343,7 @@ get_gene_mapping <- function() {
 		attributes = c("ensembl_gene_id", "hgnc_symbol"),
 		mart = mart
 	)
-	colnames(gene_mapping) <- c("gene_id", "gene_symbol")
+	colnames(gene_mapping) <- c("Geneid", "gene_symbol")
 	return(gene_mapping)
 }
 
@@ -355,12 +355,12 @@ gene_mapping <- get_gene_mapping()
 # Merge results with gene_mapping for 3utr
 enriched_result_3UTR <- test_3UTRsing %>%
 	left_join(gene_mapping, by = "gene_symbol") %>%  # Match using gene_symbol
-	select(gene_id, gene_symbol, RED, pvalue, p_adj, APAreg)
+	select(Geneid, gene_symbol, RED, pvalue, p_adj, APAreg)
 
 # Merge results with gene_mapping for IPA
 enriched_result_IPA <- test_IPAsing %>%
 	left_join(gene_mapping, by = "gene_symbol") %>%  # Match using gene_symbol
-	select(gene_id, gene_symbol,PASid, RED, pvalue, p_adj, APAreg)
+	select(Geneid, gene_symbol,PASid, RED, pvalue, p_adj, APAreg)
 
 ###Saving 
 # write.csv(test_3UTRsing, "3UTR_APAdiff_results.csv")
