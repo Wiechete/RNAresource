@@ -233,7 +233,13 @@ cpm_y2$mean_Exp = rowMeans(cpm_y2[,c(1:5)], na.rm = TRUE)
 # Łączenie tabeli z CPM
 table1 <- merge(table, cpm_y2, by = "Geneid", all.x = TRUE)  # Utrzymuje wszystkie wiersze z 'table'
 
-
+# Add a new column using case_when
+table1 <- table1 %>%
+	mutate(DE = case_when(
+		FDR <= 0.05 & logFC > 0 ~ "UP",
+		FDR <= 0.05 & logFC < 0 ~ "DN",
+		TRUE ~ "NC"  # Default case
+	))
 # Sprawdzenie wyników po połączeniu
 print(head(table1))
 
@@ -244,9 +250,7 @@ table1 %>% mutate_if(is.factor, as.character) -> table1
 table1$gene_name = ifelse(is.na(table1$gene_name) | table1$gene_name == "", table1$Geneid, table1$gene_name)
 
 # Zapis wyników do pliku CSV z separatorem tabulatora
-write.table(format(table1, scientific = TRUE), 
+write.csv(format(table1, scientific = TRUE), 
             file = "DE_hs_min1_ult.csv", 
-            sep = "\t", 
-            dec = ".", 
             row.names = FALSE, 
             quote = FALSE)
