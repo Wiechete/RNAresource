@@ -16,6 +16,9 @@ library(VennDiagram)
 # Wczytaj dane
 final_result <- read_csv("final_result.csv", na = c("NA", ""))
 
+print(unique(final_result$DE))
+print(unique(final_result$APAreg))
+
 # Usunięcie wartości NA
 final_result <- na.omit(final_result)
 
@@ -27,11 +30,11 @@ if (!dir.exists(output_dir)) {
 
 # Definiowanie kolorów dla kategorii
 category_colors <- c(
-  "UP/UP" = "red",     # UP w ekspresji + UP w długości 3'UTR
-  "UP/DN" = "blue",    # UP w ekspresji + DN w długości 3'UTR
-  "DN/UP" = "green",   # DN w ekspresji + UP w długości 3'UTR
-  "DN/DN" = "purple",  # DN w ekspresji + DN w długości 3'UTR
-  "NC" = "gray"        # NC oznacza brak deregulacji w jednej z kategorii
+  "UP/UP" = "red",
+  "UP/DN" = "blue",
+  "DN/UP" = "green",
+  "DN/DN" = "purple",
+  "NC" = "gray"
 )
 
 # Tworzenie nowej kolumny dla kategorii
@@ -41,51 +44,60 @@ final_result <- final_result %>%
     DE == "UP" & APAreg == "DN" ~ "UP/DN",
     DE == "DN" & APAreg == "UP" ~ "DN/UP",
     DE == "DN" & APAreg == "DN" ~ "DN/DN",
-    TRUE ~ "NC"  # Jeśli NC pojawia się w DE lub APAreg, cała kategoria jest NC
+    TRUE ~ "NC"
   ))
 
-# 🔹 **Wizualizacja 1: Wykres słupkowy**
-bar_plot <- ggplot(final_result, aes(x = DE, fill = Category)) +
-  geom_bar(position = "dodge") +
-  scale_fill_manual(values = category_colors) +
-  labs(
-    title = "Liczba genów z deregulacją ekspresji (DE) i długości 3'UTR (APAreg)",
-    x = "Deregulacja ekspresji (DE)",
-    y = "Liczba genów",
-    fill = "Kategoria (DE/APAreg)"
-  ) +
-  theme_classic()  # Białe tło
+# 🔹 **Wizualizacja 1: Oddzielne histogramy dla DN, NC, UP**
+for (de_status in c("DN", "NC", "UP")) {
+  sub_data <- final_result %>% filter(DE == de_status)
+  
+  hist_plot <- ggplot(sub_data, aes(x = APAreg, fill = Category)) +
+    geom_bar(position = "dodge") +
+    scale_fill_manual(values = category_colors) +
+    labs(
+      title = paste("Liczba genów dla DE =", de_status),
+      x = "Deregulacja długości 3'UTR (APAreg)",
+      y = "Liczba genów",
+      fill = "Kategoria (DE/APAreg)"
+    ) +
+    theme_classic() +
+    labs(caption = "Legenda: Pierwsze UP/DN oznacza ekspresję różnicową genu, drugie UP/DN oznacza zmianę długości 3'UTR.")
+  
+  filename <- paste0("DE_", de_status, "_histogram.png")
+  ggsave(file.path(output_dir, filename), hist_plot, width = 8, height = 6)
+}
 
-ggsave(file.path(output_dir, "DE_APA_comparison.png"), bar_plot, width = 8, height = 6)
+# 🔹 **Wizualizacja 2: Oddzielne wykresy wulkaniczne dla DN, NC, UP**
+for (de_status in c("DN", "NC", "UP")) {
+  sub_data <- final_result %>% filter(DE == de_status)
+  
+  volcano_plot <- ggplot(sub_data, aes(x = logFC, y = -log10(FDR), color = Category, label = gene_symbol)) +
+    geom_point(size = 3, alpha = 0.7) +
+    geom_text(vjust = -1, size = 3) +
+    scale_color_manual(values = category_colors) +
+    labs(
+      title = paste("Wulkan dla DE =", de_status),
+      x = "logFC",
+      y = "-log10(FDR)",
+      color = "Kategoria (DE/APAreg)"
+    ) +
+    theme_classic()
+  
+  filename <- paste0("DE_", de_status, "_volcano.png")
+  ggsave(file.path(output_dir, filename), volcano_plot, width = 10, height = 6)
+}
 
-# 🔹 **Wizualizacja 2: Wykres punktowy logFC vs FDR**
-scatter_plot <- ggplot(final_result, aes(x = logFC, y = FDR, color = Category, label = gene_symbol)) +
-  geom_point(size = 3, alpha = 0.7) +
-  geom_text(vjust = -1, size = 3) +
-  scale_color_manual(values = category_colors) +
-  labs(
-    title = "Wykres logFC vs FDR dla genów z APAreg i DE",
-    x = "logFC",
-    y = "FDR",
-    color = "Kategoria (DE/APAreg)"
-  ) +
-  theme_classic()  # Białe tło
+# 🔹 **Wizualizacja 3: Diagram Venna (UP/DN vs UP/DN)**
+venn_filename1 <- file.path(output_dir, "venn_DE_UP_DN_vs_APA_UP_DN.png")
 
-ggsave(file.path(output_dir, "logFC_vs_FDR_selected_genes.png"), scatter_plot, width = 10, height = 6)
+DE_genes_UP_DN <- final_result$gene_symbol[final_result$DE %in% c("UP", "DN")]
+APAreg_genes_UP_DN <- final_result$gene_symbol[final_result$APAreg %in% c("UP", "DN")]
 
-# 🔹 **Wizualizacja 3: Diagram Venna dla DE i APAreg**
-venn_filename <- file.path(output_dir, "venn_DE_APAreg.png")
-
-# Geny unikalne dla DE i APAreg
-DE_genes <- final_result$gene_symbol[final_result$DE != "NC"]
-APAreg_genes <- final_result$gene_symbol[final_result$APAreg != "NC"]
-
-# Tworzenie diagramu Venna
-venn.plot <- draw.pairwise.venn(
-  area1 = length(DE_genes),
-  area2 = length(APAreg_genes),
-  cross.area = length(intersect(DE_genes, APAreg_genes)),
-  category = c("Różnicowa ekspresja (DE)", "Zmiana długości 3'UTR (APAreg)"),
+venn.plot1 <- draw.pairwise.venn(
+  area1 = length(DE_genes_UP_DN),
+  area2 = length(APAreg_genes_UP_DN),
+  cross.area = length(intersect(DE_genes_UP_DN, APAreg_genes_UP_DN)),
+  category = c("Ekspresja różnicowa (UP/DN)", "Zmiana długości 3'UTR (UP/DN)"),
   fill = c("lightblue", "pink"),
   alpha = 0.5,
   cex = 1.5,
@@ -94,9 +106,33 @@ venn.plot <- draw.pairwise.venn(
   cat.dist = 0.05
 )
 
-# Zapis diagramu Venna na białym tle
-png(venn_filename, width = 800, height = 600)
-grid.draw(venn.plot)
+png(venn_filename1, width = 800, height = 600)
+grid.draw(venn.plot1)
+grid.text("Legenda: Geny UP/DN w ekspresji vs UP/DN w APAreg", x = 0.5, y = 0.1, gp = gpar(fontsize = 12, col = "black"))
+dev.off()
+
+# 🔹 **Wizualizacja 4: Diagram Venna (NC vs UP/DN)**
+venn_filename2 <- file.path(output_dir, "venn_DE_NC_vs_APA_UP_DN.png")
+
+DE_genes_NC <- final_result$gene_symbol[final_result$DE == "NC"]
+APAreg_genes_UP_DN <- final_result$gene_symbol[final_result$APAreg %in% c("UP", "DN")]
+
+venn.plot2 <- draw.pairwise.venn(
+  area1 = length(DE_genes_NC),
+  area2 = length(APAreg_genes_UP_DN),
+  cross.area = length(intersect(DE_genes_NC, APAreg_genes_UP_DN)),
+  category = c("Brak deregulacji ekspresji (NC)", "Zmiana długości 3'UTR (UP/DN)"),
+  fill = c("lightgray", "pink"),
+  alpha = 0.5,
+  cex = 1.5,
+  cat.cex = 1.5,
+  cat.pos = c(-30, 30),
+  cat.dist = 0.05
+)
+
+png(venn_filename2, width = 800, height = 600)
+grid.draw(venn.plot2)
+grid.text("Legenda: Geny bez zmiany ekspresji (NC) vs UP/DN w APAreg", x = 0.5, y = 0.1, gp = gpar(fontsize = 12, col = "black"))
 dev.off()
 
 cat("Wizualizacje zapisano w katalogu 'visualization_results'.\n")
