@@ -1,1 +1,1 @@
-CBB,Control_XYZ,Control_QZY
+CBB,DZX,GCY,YXH,XCY,XZY,Control_ZCY,Control_ZJC,Control_QZY
