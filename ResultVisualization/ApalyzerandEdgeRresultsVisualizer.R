@@ -16,9 +16,6 @@ library(VennDiagram)
 # Wczytaj dane
 final_result <- read_csv("final_result.csv", na = c("NA", ""))
 
-print(unique(final_result$DE))
-print(unique(final_result$APAreg))
-
 # Usunięcie wartości NA
 final_result <- na.omit(final_result)
 
@@ -67,25 +64,39 @@ for (de_status in c("DN", "NC", "UP")) {
   ggsave(file.path(output_dir, filename), hist_plot, width = 8, height = 6)
 }
 
-# 🔹 **Wizualizacja 2: Oddzielne wykresy wulkaniczne dla DN, NC, UP**
+# 🔹 Sprawdzenie liczby wyników APAlyzer per gen
+gene_counts <- final_result %>%
+  group_by(gene_symbol) %>%
+  summarise(n = n())
+
+# 🔹 Odfiltrowanie genów z więcej niż 3 wpisami
+filtered_genes <- gene_counts %>% filter(n <= 3) %>% pull(gene_symbol)
+filtered_result <- final_result %>% filter(gene_symbol %in% filtered_genes)
+
+# 🔹 Wizualizacja 2: Nowy wykres wulkaniczny z filtrowanymi genami
 for (de_status in c("DN", "NC", "UP")) {
-  sub_data <- final_result %>% filter(DE == de_status)
+  if (de_status == "NC") {
+    sub_data <- filtered_result %>% filter(DE == de_status & abs(logFC) > 0.5) # Zmieniony próg
+  }else {
+    sub_data <- filtered_result %>% filter(DE == de_status & FDR < 0.05 & abs(logFC) > 1)
+  }
   
   volcano_plot <- ggplot(sub_data, aes(x = logFC, y = -log10(FDR), color = Category, label = gene_symbol)) +
-    geom_point(size = 3, alpha = 0.7) +
+    geom_point(aes(size = ifelse(Category == "NC", 4, 3), alpha = ifelse(Category == "NC", 0.9, 0.7)))+
     geom_text(vjust = -1, size = 3) +
     scale_color_manual(values = category_colors) +
     labs(
-      title = paste("Wulkan dla DE =", de_status),
+      title = paste("Wulkan (filtrowane) dla DE =", de_status),
       x = "logFC",
       y = "-log10(FDR)",
       color = "Kategoria (DE/APAreg)"
     ) +
     theme_classic()
   
-  filename <- paste0("DE_", de_status, "_volcano.png")
+  filename <- paste0("DE_", de_status, "_volcano_filtered.png")
   ggsave(file.path(output_dir, filename), volcano_plot, width = 10, height = 6)
 }
+
 
 # 🔹 **Wizualizacja 3: Diagram Venna (UP/DN vs UP/DN)**
 venn_filename1 <- file.path(output_dir, "venn_DE_UP_DN_vs_APA_UP_DN.png")
