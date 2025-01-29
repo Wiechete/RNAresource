@@ -31,7 +31,7 @@ category_colors <- c(
   "UP/DN" = "blue",
   "DN/UP" = "green",
   "DN/DN" = "purple",
-  "NC" = "gray"
+  "NC" = "grey"
 )
 
 # Tworzenie nowej kolumny dla kategorii
@@ -77,19 +77,18 @@ filtered_result <- final_result %>% filter(gene_symbol %in% filtered_genes)
 for (de_status in c("DN", "NC", "UP")) {
   if (de_status == "NC") {
     sub_data <- filtered_result %>% filter(DE == de_status & abs(logFC) > 0.5) # Zmieniony próg
-  }else {
+  } else {
     sub_data <- filtered_result %>% filter(DE == de_status & FDR < 0.05 & abs(logFC) > 1)
   }
   
   volcano_plot <- ggplot(sub_data, aes(x = logFC, y = -log10(FDR), color = Category, label = gene_symbol)) +
-    geom_point(aes(size = ifelse(Category == "NC", 4, 3), alpha = ifelse(Category == "NC", 0.9, 0.7)))+
+    geom_point(size = 3, alpha = 0.7) +  # Usunięcie legendy dla rozmiaru
     geom_text(vjust = -1, size = 3) +
     scale_color_manual(values = category_colors) +
     labs(
-      title = paste("Wulkan (filtrowane) dla DE =", de_status),
+      title = paste("Wykres wulkaniczny dla próbek o niezmienionym poziomie ekspresji DE =", de_status),
       x = "logFC",
-      y = "-log10(FDR)",
-      color = "Kategoria (DE/APAreg)"
+      y = "-log10(FDR)"
     ) +
     theme_classic()
   
