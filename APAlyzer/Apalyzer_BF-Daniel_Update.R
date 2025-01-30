@@ -45,18 +45,14 @@ using<-function(...) {
 	need<-libs[req==FALSE]
 	n<-length(need)
 	if(n>0){
-		libsmsg<-if(n>2) paste(paste(need[1:(n-1)],collapse=", "),",",sep="") else need[1]
-		print(libsmsg)
-		if(n>1){
-			libsmsg<-paste(libsmsg," and ", need[n],sep="")
-		}
-		libsmsg<-paste("The following packages could not be found: ",libsmsg,"\n\r\n\rInstall missing packages?",collapse="")
-		if(winDialog(type = c("yesno"), libsmsg)=="YES"){       
-			BiocManager::install(need)
-			lapply(need,require,character.only=TRUE)
-		}
+		
 	}
 }
+
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("APAlyzer")
 
 using("APAlyzer","Rsamtools","txdbmaker","GenomicFeatures",
 			"ggplot2","parallel","zeallot", "biomaRt", "dplyr")
