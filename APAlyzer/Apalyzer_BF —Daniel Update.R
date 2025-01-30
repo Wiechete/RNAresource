@@ -285,25 +285,25 @@ test_IPAsing <- readRDS("test_IPA.rds")
 
 # 7. Visualization of analysis results
 ## 3'UTR APA plotting
-png("3UTRVolcano_plot.png", width = 800, height = 600)
+png("3UTRVolcano_plot-Daniel.png", width = 800, height = 600)
 APAVolcano(test_3UTRsing, PAS='3UTR', Pcol = "pvalue", top=5, plot_title='3UTR APA')
 
 dev.off()
 
 
-png("3UTRBox_plot.png", width = 800, height = 600)
+png("3UTRBox_plot-Daniel.png", width = 800, height = 600)
 APABox(test_3UTRsing, xlab = "APAreg", ylab = "RED", plot_title = NULL)
 
 dev.off()
 
 
 ## IPA plotting
-png("IPAVolcano_plot.png", width = 800, height = 600)
+png("IPAVolcano_plot-Daniel.png", width = 800, height = 600)
 APAVolcano(test_IPAsing, PAS='IPA', Pcol = "pvalue", top=5, plot_title='IPA')
 
 dev.off()
 
-png("IPABox_plot.png", width = 800, height = 600)
+png("IPABox_plot-Daniel.png", width = 800, height = 600)
 APABox(test_IPAsing, xlab = "APAreg", ylab = "RED", plot_title = NULL)
 
 dev.off()
@@ -316,7 +316,7 @@ test_IPAsing$APA="IPA"
 dfplot=rbind(test_3UTRsing[,c('RED','APA')],test_IPAsing[,c('RED','APA')])
 
 ###violin
-png("ViolinDiff_plot.png", width = 800, height = 600)
+png("ViolinDiff_plot-Daniel.png", width = 800, height = 600)
 ggplot(dfplot, aes(x = APA, y = RED)) + 
     geom_violin(trim = FALSE) + 
     geom_boxplot(width = 0.2)+ theme_bw() + 
@@ -328,7 +328,7 @@ dev.off()
 
 ###CDF
 
-png("CDFDiff_plot.png", width = 800, height = 600)
+png("CDFDiff_plot-Daniel.png", width = 800, height = 600)
 ggplot(dfplot, aes( x = RED, color = APA)) + 
     stat_ecdf(geom = "step") +
     ylab("cumulative fraction")+ 
