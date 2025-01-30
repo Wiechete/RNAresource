@@ -13,6 +13,15 @@ library(dplyr)
 library(readr)
 library(VennDiagram)
 
+# Pobranie argumentu z terminala
+args <- commandArgs(trailingOnly = TRUE)
+csv_file <- ifelse(length(args) > 0, args[1], "final_result.csv")
+
+# Wczytaj dane
+if (!file.exists(csv_file)) {
+  stop(paste("Plik", csv_file, "nie istnieje!"))
+}
+
 # Wczytaj dane
 final_result <- read_csv("final_result.csv", na = c("NA", ""))
 
