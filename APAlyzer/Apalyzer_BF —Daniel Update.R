@@ -202,7 +202,7 @@ if(batch_mode_on){
 
 ## Calculation of relative expression
 
-	DFUTRraw=PASEXP_3UTR(UTRdbraw, flsall, Strandtype="NONE")
+	DFUTRraw = PASEXP_3UTR(UTRdbraw, bamProcessed, Strandtype="NONE", SeqType="PairedEnd")
 }else{
 	DFUTRraw <- readRDS("DFUTRraw.rds")
 }
@@ -233,8 +233,11 @@ bamToIntrons <- file_path
 names(bamToIntrons) <- new_sample_names
 bamToIntrons
 
+# Przetwarzanie plików BAM dla paired-end
+bamProcessed <- threePairedEnd(flsall, nts=numThreads)
+
 if(batch_mode_on){
-IPA_OUTraw=PASEXP_IPA(dfIPA, dfLE, bamToIntrons, Strandtype="NONE", nts=numThreads, SeqType ='ThreeMostPairEnd')
+  IPA_OUTraw = PASEXP_IPA(dfIPA, dfLE, bamProcessed, Strandtype="NONE", nts=numThreads, SeqType='ThreeMostPairEnd')
 }else{
 	IPA_OUTraw <- readRDS("IPA_OUTraw.rds")
 }
