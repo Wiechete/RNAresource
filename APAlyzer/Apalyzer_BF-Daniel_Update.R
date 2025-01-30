@@ -276,8 +276,8 @@ test_IPAsing=APAdiff(sampleTable,
                         p_adjust_methods="fdr") 
 
 # filename <- "test_IPA.rds"
-test_3UTRsing <- readRDS("test_3UTR.rds")
-test_IPAsing <- readRDS("test_IPA.rds")
+#test_3UTRsing <- readRDS("test_3UTR.rds")
+#test_IPAsing <- readRDS("test_IPA.rds")
 
 
 # 7. Visualization of analysis results
