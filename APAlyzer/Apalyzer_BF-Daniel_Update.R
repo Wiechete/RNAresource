@@ -198,7 +198,8 @@ if(batch_mode_on){
 
 ## Calculation of relative expression
 
-	DFUTRraw = PASEXP_3UTR(UTRdbraw, bamProcessed, Strandtype="NONE", SeqType="PairedEnd")
+	DFUTRraw = PASEXP_3UTR(UTRdbraw, bamProcessed, Strandtype="NONE")
+	
 }else{
 	DFUTRraw <- readRDS("DFUTRraw.rds")
 }
